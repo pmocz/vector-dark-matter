@@ -21,9 +21,9 @@ addpath('helpers/')
 %% Parameters
 m22      = 1;                              % (m/ 10^-22 eV)
 Lbox     = 20;                             % kpc
-N        = 256;128;   64;128;256;512; %                       % resolution
-Tfinal   = 1;                              % kpc/(km/s) ~ 978 Myr
-Nout     = 100;                            % number of output
+N        = 80;100; 128;   64;128;256;512; %                       % resolution
+Tfinal   = 2;                              % kpc/(km/s) ~ 978 Myr
+Nout     = 200;                            % number of output
 myseed   = 42; %
 
 
@@ -41,7 +41,7 @@ c = 299792.458;              % c / (km/s)
 
 m_per_hbar = m/hbar;
 
-
+clim = [5 9];
 
 %% setup
 
@@ -163,6 +163,20 @@ if ~loadedPreviousSave
     hdf5write(filename, '/psi2Im', double(imag(psi2)), 'WriteMode', 'append')
     hdf5write(filename, '/psi3Re', double(real(psi3)), 'WriteMode', 'append')
     hdf5write(filename, '/psi3Im', double(imag(psi3)), 'WriteMode', 'append')
+    
+    % Save Image
+    savname = ['frames/s' num2str(myseed) 'r' num2str(N) 's' num2str(snapnum) '.png'];
+    A = log10([ mean(abs(psi1).^2,3) mean(abs(psi2).^2,3) mean(abs(psi3).^2,3) ]);
+    A = circshift(A, [N/2-round(108*N/256)+1, N/2-round(12*N/256)+1]);
+    Amax = clim(2);
+    Amin = clim(1);
+    A = (A - Amin)/(Amax-Amin);
+    A(A<0) = 0;
+    A(A>1) = 1;
+    Ncolor = 256;
+    A = uint8(A*Ncolor);
+    mymap = inferno(Ncolor);
+    imwrite(A, mymap, savname,'png');
 end
 
 snapnum = snapnum + 1;
@@ -239,6 +253,21 @@ while t < Tfinal
         hdf5write(filename, '/psi3Re', double(real(psi3)), 'WriteMode', 'append')
         hdf5write(filename, '/psi3Im', double(imag(psi3)), 'WriteMode', 'append')
         
+        % Save Image
+        savname = ['frames/s' num2str(myseed) 'r' num2str(N) 's' num2str(snapnum) '.png'];
+        A = log10([ mean(abs(psi1).^2,3) mean(abs(psi2).^2,3) mean(abs(psi3).^2,3) ]);
+        A = circshift(A, [N/2-round(108*N/256)+1, N/2-round(12*N/256)+1]);
+        Amax = clim(2);
+        Amin = clim(1);
+        A = (A - Amin)/(Amax-Amin);
+        A(A<0) = 0;
+        A(A>1) = 1;
+        Ncolor = 256;
+        A = uint8(A*Ncolor);
+        mymap = inferno(Ncolor);
+        imwrite(A, mymap, savname,'png');
+        
+        
         snapnum = snapnum + 1;
         saveNextTurn = 0;
         
@@ -246,7 +275,7 @@ while t < Tfinal
         if plotRealTime
             figure(fh);
             imagesc(log10([  mean(abs(psi1).^2,3) mean(abs(psi2).^2,3)  mean(abs(psi3).^2,3) ]))
-            caxis([3 9])
+            caxis(clim)
             axis off
             pbaspect(gca,[3 1 1])
             colormap(inferno)
