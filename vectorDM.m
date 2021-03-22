@@ -1,5 +1,6 @@
-%close all
-%clear all
+
+close all
+clear all
 clc
 %% Philip Mocz (2021), Princeton University
 % Merge solitons with Vector Dark Matter Formulation
@@ -21,15 +22,20 @@ addpath('helpers/')
 %% Parameters
 m22      = 1;                              % (m/ 10^-22 eV)
 Lbox     = 20;                             % kpc
-N        = 80;100; 128;   64;128;256;512; %                       % resolution
+N        = 128;32;64;80;100; 128;   64;128;256;512; %                       % resolution
 Tfinal   = 2;                              % kpc/(km/s) ~ 978 Myr
-Nout     = 200;                            % number of output
+Nout     = 20; 200;                            % number of output
 myseed   = 42; %
+saveEnergies = true; true;  false;
 
 
-output   = ['output/vdm_s' num2str(myseed) 'r' num2str(N) '/'];
+output   = ['output/vdm_s' num2str(myseed) 'r' num2str(N) 'o' num2str(Nout) '/'];
+energyFile = [output 'energy.txt'];
 plotRealTime = false; true; false;
 
+
+cc = 1;
+dt_energySave = 0.001;
 
 
 %% Constants
@@ -165,7 +171,7 @@ if ~loadedPreviousSave
     hdf5write(filename, '/psi3Im', double(imag(psi3)), 'WriteMode', 'append')
     
     % Save Image
-    savname = ['frames/s' num2str(myseed) 'r' num2str(N) 's' num2str(snapnum) '.png'];
+    savname = ['frames/s' num2str(myseed) 'r' num2str(N) 'o' num2str(Nout) 's' num2str(snapnum) '.png'];
     A = log10([ mean(abs(psi1).^2,3) mean(abs(psi2).^2,3) mean(abs(psi3).^2,3) ]);
     A = circshift(A, [N/2-round(108*N/256)+1, N/2-round(12*N/256)+1]);
     Amax = clim(2);
@@ -192,6 +198,11 @@ if plotRealTime
 end
 
 %stop
+
+
+%%
+energyFileID = fopen(energyFile, 'a');
+
 
 %% simulation
 tic;
@@ -254,7 +265,7 @@ while t < Tfinal
         hdf5write(filename, '/psi3Im', double(imag(psi3)), 'WriteMode', 'append')
         
         % Save Image
-        savname = ['frames/s' num2str(myseed) 'r' num2str(N) 's' num2str(snapnum) '.png'];
+        savname = ['frames/s' num2str(myseed) 'r' num2str(N) 'o' num2str(Nout) 's' num2str(snapnum) '.png'];
         A = log10([ mean(abs(psi1).^2,3) mean(abs(psi2).^2,3) mean(abs(psi3).^2,3) ]);
         A = circshift(A, [N/2-round(108*N/256)+1, N/2-round(12*N/256)+1]);
         Amax = clim(2);
@@ -283,7 +294,25 @@ while t < Tfinal
         end
     end
     
+    % save enrergies
+    if saveEnergies
+        if t > dt_energySave * cc
+            rho = abs(psi1).^2 + abs(psi2).^2 + abs(psi3).^2;
+            V = getpotential( rho, rhobar, Lbox, G );
+            [ Krho_1, Kv_1, W_1, KQ_1, ~, ~, ~, ~ ] = getenergies( psi1, V, Lbox, G, m, hbar );
+            [ Krho_2, Kv_2, W_2, KQ_2, ~, ~, ~, ~ ] = getenergies( psi2, V, Lbox, G, m, hbar );
+            [ Krho_3, Kv_3, W_3, KQ_3, ~, ~, ~, ~ ] = getenergies( psi3, V, Lbox, G, m, hbar );
+            fprintf(energyFileID, '%f %f %f %f %f %f %f %f %f %f %f %f %f \n', [t Krho_1, Kv_1, W_1, KQ_1, Krho_2, Kv_2, W_2, KQ_2, Krho_3, Kv_3, W_3, KQ_3 ]);
+            cc = cc + 1;
+        end
+    end
+    
     
 end
 toc;
+
+
+%%
+fclose(energyFileID);
+
 
