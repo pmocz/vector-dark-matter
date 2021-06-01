@@ -14,6 +14,14 @@ clc
 %%
 Ns = [ 32 64 128 ];
 
+runScalarVersion = true;  % false; true
+
+
+output_tag = '';
+if runScalarVersion
+    output_tag = '_scalar';
+end
+
 %stop
 
 %% simulation parameters
@@ -45,7 +53,7 @@ for N = Ns
     
     
     
-    snapdir   = [output_root 'output/vdm_s' num2str(myseed) 'r' num2str(N) 'o' num2str(Nout) '/'];
+    snapdir   = [output_root 'output/vdm_s' num2str(myseed) 'r' num2str(N) 'o' num2str(Nout) output_tag '/'];
     
     
     for snapnum = snaps
@@ -63,17 +71,17 @@ for N = Ns
             cmap = inferno(256);
             clim = [5 9];
             % Psi 1
-            savname = ['../writeup/s' num2str(myseed) 'r' num2str(N) 's' num2str(snapnum) 'psi1.png'];
+            savname = ['../writeup/s' num2str(myseed) 'r' num2str(N) 's' num2str(snapnum) 'psi1' output_tag '.png'];
             A = log10(mean(abs(psi1).^2,3));
             my_imwrite(A,cmap,clim,savname)
             
             % Psi 2
-            savname = ['../writeup/s' num2str(myseed) 'r' num2str(N) 's' num2str(snapnum) 'psi2.png'];
+            savname = ['../writeup/s' num2str(myseed) 'r' num2str(N) 's' num2str(snapnum) 'psi2' output_tag '.png'];
             A = log10(mean(abs(psi2).^2,3));
             my_imwrite(A,cmap,clim,savname)
             
             % Psi 3
-            savname = ['../writeup/s' num2str(myseed) 'r' num2str(N) 's' num2str(snapnum) 'psi3.png'];
+            savname = ['../writeup/s' num2str(myseed) 'r' num2str(N) 's' num2str(snapnum) 'psi3' output_tag '.png'];
             A = log10(mean(abs(psi3).^2,3));
             my_imwrite(A,cmap,clim,savname)
             
@@ -82,17 +90,17 @@ for N = Ns
             cmap = redblue(256);
             clim = [-1 1];
             % psi 1
-            savname = ['../writeup/s' num2str(myseed) 'r' num2str(N) 's' num2str(snapnum) 'psi1_phase.png'];
+            savname = ['../writeup/s' num2str(myseed) 'r' num2str(N) 's' num2str(snapnum) 'psi1_phase' output_tag '.png'];
             A = cos(angle(psi1(:,:,end/2)));
             my_imwrite(A,cmap,clim,savname)
             
             % psi 2
-            savname = ['../writeup/s' num2str(myseed) 'r' num2str(N) 's' num2str(snapnum) 'psi2_phase.png'];
+            savname = ['../writeup/s' num2str(myseed) 'r' num2str(N) 's' num2str(snapnum) 'psi2_phase' output_tag '.png'];
             A = cos(angle(psi2(:,:,end/2)));
             my_imwrite(A,cmap,clim,savname)
             
             % psi 3
-            savname = ['../writeup/s' num2str(myseed) 'r' num2str(N) 's' num2str(snapnum) 'psi3_phase.png'];
+            savname = ['../writeup/s' num2str(myseed) 'r' num2str(N) 's' num2str(snapnum) 'psi3_phase' output_tag '.png'];
             A = cos(angle(psi3(:,:,end/2)));
             my_imwrite(A,cmap,clim,savname)
             
@@ -161,7 +169,7 @@ axis([0 Tfinal -1e13 1.5e13])
 lh = legend('$W$','$K_Q$','$K_v$','$K_\rho$','$W+K_Q$');
 set(lh,'location','northwest','interpreter','latex')
 
-saveas(fig,'../writeup/energies.eps','epsc2');
+saveas(fig,['../writeup/energies' output_tag '.eps'],'epsc2');
 
 
 
@@ -173,7 +181,7 @@ set(fig,'position',[0 0 900 600],'PaperPosition',[0 0 9 6]);
 
 for N = fliplr(Ns)
     % read energy file
-    snapdir   = [output_root 'output/vdm_s' num2str(myseed) 'r' num2str(N) 'o' num2str(Nout) '/'];
+    snapdir   = [output_root 'output/vdm_s' num2str(myseed) 'r' num2str(N) 'o' num2str(Nout) output_tag '/'];
     energyFile = [snapdir 'energy.txt'];
     fileID = fopen(energyFile);
     A = fscanf(fileID,'%f %f %f %f %f %f %f %f %f %f %f %f %f');
@@ -215,4 +223,4 @@ axis([0 Tfinal -1.5e13 1.5e13])
 lh = legend('$W$','$K_Q$','$K_v$','$K_\rho$','$W+K_Q$');
 set(lh,'location','northwest','interpreter','latex')
 
-saveas(fig,'../writeup/energies2.eps','epsc2');
+saveas(fig,['../writeup/energies2' output_tag '.eps'],'epsc2');

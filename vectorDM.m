@@ -1,7 +1,7 @@
-
 close all
 clear all
 clc
+
 %% Philip Mocz (2021), Princeton University
 % Merge solitons with Vector Dark Matter Formulation
 
@@ -22,14 +22,20 @@ addpath('helpers/')
 %% Parameters
 m22      = 1;                              % (m/ 10^-22 eV)
 Lbox     = 20;                             % kpc
-N        = 128;32;64;80;100; 128;   64;128;256;512; %                       % resolution
+N        = 128;   64;128;256;512; %                       % resolution
 Tfinal   = 2;                              % kpc/(km/s) ~ 978 Myr
 Nout     = 20; 200;                            % number of output
 myseed   = 42; %
-saveEnergies = true; true;  false;
+saveEnergies = true;     %true;  false;
+runScalarVersion = false;  % false; true
 
 
-output   = ['output/vdm_s' num2str(myseed) 'r' num2str(N) 'o' num2str(Nout) '/'];
+output_tag = '';
+if runScalarVersion
+    output_tag = '_scalar';
+end
+
+output   = ['output/vdm_s' num2str(myseed) 'r' num2str(N) 'o' num2str(Nout) output_tag '/'];
 energyFile = [output 'energy.txt'];
 plotRealTime = false; true; false;
 
@@ -96,7 +102,12 @@ for i = 1:3*Ncores_per_dim
     end
 end
 
-
+if runScalarVersion
+    % in this mode, put all the dark matter into psi1
+    psi1 = psi1 + psi2 + psi3;
+    psi2 = 0*psi2;
+    psi3 = 0*psi3;
+end
 
 
 Mtot = sum(abs(psi1(:)).^2 + abs(psi2(:)).^2 + abs(psi3(:)).^2) * dx^3;       % total mass
